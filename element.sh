@@ -21,15 +21,17 @@ is_number() {
 # Check if the input is numeric (atomic number) or a string (symbol/name)
 if is_number "$ELEMENT_ARG"; then
   # If the input is a number (atomic number), query based on atomic_number
-  SQL_QUERY="SELECT e.atomic_number, e.symbol, e.name, p.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius
+  SQL_QUERY="SELECT e.atomic_number, e.symbol, e.name, t.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius
   FROM elements e
   JOIN properties p ON e.atomic_number = p.atomic_number
+  JOIN types t ON p.type_id = t.type_id
   WHERE e.atomic_number = $ELEMENT_ARG;"
 else
   # If the input is not a number (symbol or name), query based on symbol or name
-  SQL_QUERY="SELECT e.atomic_number, e.symbol, e.name, p.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius
+  SQL_QUERY="SELECT e.atomic_number, e.symbol, e.name, t.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius
   FROM elements e
   JOIN properties p ON e.atomic_number = p.atomic_number
+  JOIN types t ON p.type_id = t.type_id
   WHERE LOWER(e.symbol) = LOWER('$ELEMENT_ARG') OR LOWER(e.name) = LOWER('$ELEMENT_ARG');"
 fi
 
