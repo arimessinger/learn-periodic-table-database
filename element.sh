@@ -9,14 +9,29 @@ fi
 # Define the database connection details (using the provided database name and user)
 PSQL="psql --username=freecodecamp --dbname=periodic_table -t --no-align -c"
 
-# Escape special characters in the input argument
+# Escape special characters in the input argument to prevent SQL injection
 ELEMENT_ARG=$(echo "$1" | sed "s/'/''/g")   # Escape any single quotes in the input
 
-# SQL query to fetch data from the database based on the argument (atomic_number, symbol, or name)
-SQL_QUERY="SELECT e.atomic_number, e.symbol, e.name, p.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius
-FROM elements e
-JOIN properties p ON e.atomic_number = p.atomic_number
-WHERE e.atomic_number = '$ELEMENT_ARG' OR e.symbol = '$ELEMENT_ARG' OR e.name = '$ELEMENT_ARG';"
+# Function to check if a string is numeric (i.e., if the input is a number)
+is_number() {
+  # Check if the string is numeric (only contains digits)
+  [[ "$1" =~ ^[0-9]+$ ]]
+}
+
+# Check if the input is numeric (atomic number) or a string (symbol/name)
+if is_number "$ELEMENT_ARG"; then
+  # If the input is a number (atomic number), query based on atomic_number
+  SQL_QUERY="SELECT e.atomic_number, e.symbol, e.name, p.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius
+  FROM elements e
+  JOIN properties p ON e.atomic_number = p.atomic_number
+  WHERE e.atomic_number = $ELEMENT_ARG;"
+else
+  # If the input is not a number (symbol or name), query based on symbol or name
+  SQL_QUERY="SELECT e.atomic_number, e.symbol, e.name, p.type, p.atomic_mass, p.melting_point_celsius, p.boiling_point_celsius
+  FROM elements e
+  JOIN properties p ON e.atomic_number = p.atomic_number
+  WHERE LOWER(e.symbol) = LOWER('$ELEMENT_ARG') OR LOWER(e.name) = LOWER('$ELEMENT_ARG');"
+fi
 
 # Run the SQL query using PSQL variable
 RESULT=$(psql --username=freecodecamp --dbname=periodic_table -t --no-align -c "$SQL_QUERY")
